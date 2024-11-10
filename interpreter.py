@@ -1,21 +1,32 @@
-from collections import defaultdict
+from collections import defaultdict,deque
 
 variables_dict = defaultdict(int)
+while_stack = deque()
 
 def decode_code(code):
     lines = code.splitlines()
     i = 0
+    last_level = 0
     while i < len(lines):
         curr_level = 0
         while lines[i][curr_level] == '\t':
             curr_level+=1
         
+        #if finished with curr while code lines jump back to while condition
+        if curr_level < last_level and  while_stack: 
+            i = while_stack.pop()
+            continue
+
         decode_result = decode_line(lines[i][curr_level:])
 
-        #if a condition is not satisfied find next line
-        if decode_result == False:
+        #if a condition is not satisfied find next line to execute
+        if not decode_result:
             i = skip_lines_after_false_condition(lines, i, curr_level)
+        #if True and while condition save i for jump
+        elif "while" in lines[i][curr_level:]:
+            while_stack.append(i)
 
+        last_level = curr_level
         i += 1    
         
 
@@ -27,7 +38,7 @@ def decode_line(line):
         return eval_if(line[3:])
     
     if line[:6] == "while ":
-        return ("while")
+        return eval_if(line[6:])
     
     if line[:7] == "return ":
         if line[7:] in variables_dict:
@@ -36,6 +47,7 @@ def decode_line(line):
     
     #eval expr
     return  eval_expr(line)
+    
 
 def eval_if(expr):
     i = 0
