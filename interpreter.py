@@ -7,16 +7,18 @@ def decode_code(code):
     lines = code.splitlines()
     i = 0
     last_level = 0
+    jumped_last_it = False
     while i < len(lines):
         curr_level = 0
         while lines[i][curr_level] == '\t':
             curr_level+=1
         
         #if finished with curr while code lines jump back to while condition
-        if curr_level < last_level and  while_stack: 
+        if not jumped_last_it and curr_level < last_level and  while_stack: 
             i = while_stack.pop()
+            jumped_last_it = True
             continue
-
+        jumped_last_it = False
         decode_result = decode_line(lines[i][curr_level:])
 
         #if a condition is not satisfied find next line to execute
@@ -35,14 +37,19 @@ def decode_code(code):
 
 def decode_line(line):
     if line[:3] == "if ":
+        #print("if")
         return eval_if(line[3:])
     
     if line[:6] == "while ":
+        #print("while")
+        #print(eval_if(line[6:]))
         return eval_if(line[6:])
     
     if line[:7] == "return ":
         if line[7:] in variables_dict:
+            #print(f"end {variables_dict[line[7:]]}")
             return variables_dict[line[7:]]
+        #print(f"end {line[7:]}")
         return line[7:]
     
     #eval expr

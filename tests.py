@@ -25,6 +25,7 @@ class Tests(unittest.TestCase):
     def test_if_and_arithmetic(self):
         examlpes = Example_Codes()
         self.assertEqual(interpreter.decode_code(examlpes.code1), 17)
+        self.assertEqual(interpreter.decode_code(examlpes.code1_1), 18)
         self.assertEqual(interpreter.decode_code(examlpes.code2), 0)
         self.assertEqual(interpreter.decode_code(examlpes.code3), 0)
         self.assertEqual(interpreter.decode_code(examlpes.code4), 0)
@@ -32,17 +33,23 @@ class Tests(unittest.TestCase):
         self.assertEqual(interpreter.decode_code(examlpes.code6), 0)
         self.assertEqual(interpreter.decode_code(examlpes.code7), 17)
         self.assertEqual(interpreter.decode_code(examlpes.code8), 17)
+        self.assertEqual(interpreter.decode_code(examlpes.code8_1), 1)
+        self.assertEqual(interpreter.decode_code(examlpes.code8_2), 18)
+        self.assertEqual(interpreter.decode_code(examlpes.code8_3), 1)
 
     def test_while(self):
         examlpes = Example_Codes()
         self.assertEqual(interpreter.decode_code(examlpes.code9), 5)
         self.assertEqual(interpreter.decode_code(examlpes.code10), 5)
         self.assertEqual(interpreter.decode_code(examlpes.code11), 0)
+        
+    def test_nested_while(self):
+        examlpes = Example_Codes()
         self.assertEqual(interpreter.decode_code(examlpes.code12), 0)
         self.assertEqual(interpreter.decode_code(examlpes.code13), 25)
-        self.assertEqual(interpreter.decode_code(examlpes.code14), 25)
+        self.assertEqual(interpreter.decode_code(examlpes.code14), 30)
         
 
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main()#defaultTest="Tests.test_nested_while"
