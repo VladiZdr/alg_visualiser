@@ -90,10 +90,13 @@ class MyWindow(QWidget):
         #execute line if not finished
         if len(interpreter.order_of_execution) <= self.curr_state:
             return
+        
+        #curr_state = iterator for the order (state = new line)
+        #in interpreter.decode_code() is the correct order decided and interpreter.order_of_execution stores the line's index
         interpreter.execute_next(self.lines[interpreter.order_of_execution[self.curr_state]], interpreter.get_level(self.lines[interpreter.order_of_execution[self.curr_state]]))
         self.update_vals_fun()
         
-        #update visuals
+        #update visuals and go to next state
         self.labels_for_states[interpreter.order_of_execution[self.curr_state]].setStyleSheet("background-color: grey; border: 1px solid black; border-radius: 5px;")
         self.curr_state += 1
         
@@ -127,7 +130,7 @@ class MyWindow(QWidget):
             if widget_to_remove is not None:
                 widget_to_remove.deleteLater()
 
-        #create states
+        #create states (state = new line in code)
         for i in range(len(self.lines)):
             curr_level = interpreter.get_level(self.lines[i])
             self.states.append(State.State(i,curr_level,i))
@@ -162,12 +165,9 @@ class MyWindow(QWidget):
 
     def get_instructions_fun(self):
         msg_box = QMessageBox(self)
-        
         msg_box.setIcon(QMessageBox.Information)
         msg_box.setWindowTitle("Information")
         msg_box.setText(examlpe_codes_for_tests.Example_Codes().placeholder_t_for_code_segment)
-        
-        
         msg_box.exec_()
         
         
