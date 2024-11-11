@@ -6,6 +6,8 @@ order_of_execution = []
 
 def decode_code(code):
     variables_dict.clear()
+    while_stack.clear()
+    order_of_execution.clear()
     lines = code.splitlines()
     i = 0
     last_level = 0
