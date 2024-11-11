@@ -49,9 +49,6 @@ class MyWindow(QWidget):
 
         #Functionality
 
-        #tmp 
-        #self.code_text.setText(examlpe_codes_for_tests.Example_Codes().code13)
-
         create_visuals_b = QPushButton("Create visuals",self)
         create_visuals_b.clicked.connect(self.create_vis_fun)
 
@@ -100,21 +97,25 @@ class MyWindow(QWidget):
         self.labels_for_states[interpreter.order_of_execution[self.curr_state]].setStyleSheet("background-color: grey; border: 1px solid black; border-radius: 5px;")
         self.curr_state += 1
         
-        if len(interpreter.order_of_execution)  > self.curr_state:
+        if len(interpreter.order_of_execution) - 1 > self.curr_state:
             self.labels_for_states[interpreter.order_of_execution[self.curr_state]].setStyleSheet("background-color: yellow; border: 1px solid black; border-radius: 5px;")
         else:
             self.values_text.setText(self.values_text.toPlainText() + "\nEND")
             self.labels_for_states[len(self.labels_for_states) - 1].setStyleSheet("background-color: red; border: 1px solid black; border-radius: 5px;")
     
     def create_vis_fun(self):
+        #get code without empty lines
         code = self.code_text.toPlainText()
+        code = "\n".join([line for line in code.splitlines() if line.strip()])
         if code == "":
             return
         code += "\nreturn"
+
         #decide order of states and clear dictionary so the second execution starts from scratch
+        self.lines = code.splitlines()
         interpreter.decode_code(code)
         interpreter.variables_dict.clear()
-        self.lines = code.splitlines()
+        
 
         #clear states if button has already been pressed
         self.states = []
@@ -143,21 +144,12 @@ class MyWindow(QWidget):
             state.setFixedSize(50, 50)
             state.setStyleSheet("background-color: grey; border: 1px solid black; border-radius: 25px;")
             state.setAlignment(Qt.AlignCenter)
-            if i != len(self.states):
-                state.setText(str(s.index))
+            if i != len(self.states) - 1:
+                state.setText(str(s.index + 1))
             else:
                 state.setText("END")
             grid_layout.addWidget(state, s.pos_y, s.pos_x)
             self.labels_for_states.append(state)  
-
-        #add end state 
-        end_label = QLabel(self)
-        end_label.setFixedSize(50, 50)
-        end_label.setStyleSheet("background-color: grey; border: 1px solid black; border-radius: 25px;")
-        end_label.setAlignment(Qt.AlignCenter)
-        end_label.setText("END")
-        grid_layout.addWidget(end_label, len(self.lines) , 0)
-        self.labels_for_states[len(self.labels_for_states) - 1] = end_label
 
         scroll_area.setWidget(container_widget)
         scroll_area.setFixedHeight(800)
