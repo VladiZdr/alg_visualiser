@@ -10,9 +10,7 @@ def decode_code(code):
     jumped_last_it = False
 
     while i < len(lines):
-        curr_level = 0
-        while lines[i][curr_level] == '\t':
-            curr_level+=1
+        curr_level = get_level(lines[i])
         
         #if finished with current loop jump back to while condition
         if not jumped_last_it and curr_level < last_level and  while_stack: 
@@ -195,3 +193,9 @@ def skip_lines_after_false_condition(lines, i, curr_level):
 
     # Return the index of the last line before the level was less than or equal to `curr_level`
     return i - 1
+
+def get_level(line):
+    curr_level = 0
+    while line[curr_level] == '\t':
+        curr_level+=1
+    return curr_level

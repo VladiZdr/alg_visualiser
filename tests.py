@@ -48,8 +48,21 @@ class Tests(unittest.TestCase):
         self.assertEqual(interpreter.decode_code(examlpes.code12), 0)
         self.assertEqual(interpreter.decode_code(examlpes.code13), 25)
         self.assertEqual(interpreter.decode_code(examlpes.code14), 30)
+    
+    def test_update_vals(self):
+        examlpes = Example_Codes()
+        my_window = interface.MyWindow()
+        interpreter.variables_dict["number1"] = 1
+        interpreter.variables_dict["number2"] = 1
+        interpreter.variables_dict["number3"] = 1
+        interpreter.variables_dict["number4"] = 1
+        interpreter.variables_dict["number5"] = 1
+        interpreter.variables_dict["number6"] = 1
+        #self.assertEqual(my_window.update_vals_fun(), examlpes.res_test1)
+        interpreter.variables_dict["number6"] = 10
+        #self.assertEqual(my_window.update_vals_fun(), examlpes.res_test2)
         
 
 
 if __name__ == "__main__":
-    unittest.main()#defaultTest="Tests.test_nested_while"
+    unittest.main()#defaultTest="Tests.test_update_vals"

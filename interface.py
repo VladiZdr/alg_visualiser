@@ -1,8 +1,10 @@
 import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout,QHBoxLayout, QTextEdit, QPushButton,QMessageBox, QLabel
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout,QHBoxLayout, QTextEdit, QPushButton,QMessageBox, QLabel,QScrollArea,QGridLayout
 import interpreter
+import State
+import examlpe_codes_for_tests
 
 class MyWindow(QWidget):
     app = QApplication([])
@@ -18,6 +20,7 @@ class MyWindow(QWidget):
     buttons_layout = QHBoxLayout()
 
     states = []
+    labels_for_states = []
 
     def __init__(self):
         super().__init__()
@@ -27,21 +30,9 @@ class MyWindow(QWidget):
         self.resize(1900, 1000)
 
         #Functionality
-
-        #tmp---------------------------------
-        for i in range(5):
-            state = QLabel(self)
-            state.setFixedSize(50, 50)  # Set size of each indicator
-            state.setStyleSheet("background-color: grey; border: 1px solid black; border-radius: 25px;")
-            state.setAlignment(Qt.AlignCenter)
-            state.setText(str(i + 1))
-            self.states.append(state)
-            self.states_layout.addWidget(state)
-        self.light_up_button = QPushButton("Light Up", self)
-        self.light_up_button.clicked.connect(self.light_up_states)
-
-        self.code_text.setText("number = 16\nif number >= 16:\n\tprint(number)")
-        #tmp---------------------------------
+#tmp---------------------------------
+        self.code_text.setText(examlpe_codes_for_tests.Example_Codes().code13)
+#tmp---------------------------------
 
         run_code_b = QPushButton("Run",self)
         run_code_b.clicked.connect(self.run_code_fun)
@@ -61,10 +52,6 @@ class MyWindow(QWidget):
         self.code_layout.addWidget(self.code_text)
         self.code_layout.addWidget(self.values_text)
 
-        #------------- tmp
-        self.buttons_layout.addWidget(self.light_up_button)
-        #------------- tmp
-
         self.buttons_layout.addWidget(create_visuals_b)
         self.buttons_layout.addWidget(run_code_b)
         self.buttons_layout.addWidget(update_vals_b)
@@ -80,14 +67,23 @@ class MyWindow(QWidget):
 
 
     #button functions
-    def create_vis_fun(self):
-        QMessageBox.information(self, "run_b Clicked", "creating visuals")
-
+    
     def update_vals_fun(self):
-        QMessageBox.information(self, "run_b Clicked", "updating values")
+        displayed_vals = "" 
+        for val in interpreter.variables_dict:
+            displayed_vals += val + " = " + str(interpreter.variables_dict[val]) + "\n"
+        self.values_text.setText(displayed_vals)
+        return displayed_vals
+
     
     def next_step_fun(self):
-        QMessageBox.information(self, "run_b Clicked", "next step transition")
+        if len(self.states) - 1> self.curr_state + 1:
+            self.labels_for_states[self.curr_state].setStyleSheet("background-color: grey; border: 1px solid black; border-radius: 5px;")
+            self.curr_state = self.curr_state + 1
+            self.labels_for_states[self.curr_state].setStyleSheet("background-color: yellow; border: 1px solid black; border-radius: 5px;")
+        else:
+            self.labels_for_states[self.curr_state].setStyleSheet("background-color: grey; border: 1px solid black; border-radius: 5px;")
+            self.labels_for_states[self.curr_state + 1].setStyleSheet("background-color: red; border: 1px solid black; border-radius: 5px;")
 
     def run_code_fun(self):
         code_input = self.code_text.toPlainText()
@@ -96,15 +92,51 @@ class MyWindow(QWidget):
             QMessageBox.information(self, "run_b Clicked", f"User Input: {code_input}")
         except Exception as e:
             QMessageBox.information(self, "run_b Clicked", f"An error occurred: {e}")
-    
-    #tmp---------------------------------
-    def light_up_states(self):
-        # Change the color of each indicator to simulate "lighting up"
-        for indicator in self.states:
-            indicator.setStyleSheet("background-color: yellow; border: 1px solid black; border-radius: 25px;")    
-    #tmp---------------------------------        
+
+    def create_vis_fun(self):
+        code = self.code_text.toPlainText()
+        lines = code.splitlines()
+
+        self.states = []
+        for i in range(len(lines)):
+            curr_level = interpreter.get_level(lines[i])
+            self.states.append(State.State(None,None,i,curr_level,i))
+        
+            
 
 
+        # Remove previous scroll areas in self.states_layout, if any
+        for i in reversed(range(self.states_layout.count())):
+            widget_to_remove = self.states_layout.itemAt(i).widget()
+            if widget_to_remove is not None:
+                widget_to_remove.deleteLater()
+
+        scroll_area = QScrollArea(self)
+        scroll_area.setWidgetResizable(True)
+
+        container_widget = QWidget()
+        grid_layout = QGridLayout(container_widget)
+
+        for i, s in enumerate(self.states):
+            state = QLabel(self)
+            state.setFixedSize(50, 50)
+            state.setStyleSheet("background-color: grey; border: 1px solid black; border-radius: 25px;")
+            state.setAlignment(Qt.AlignCenter)
+            state.setText(str(s.index + 1))
+            grid_layout.addWidget(state, s.pos_y, s.pos_x)
+            self.labels_for_states.append(state)   
+
+        scroll_area.setWidget(container_widget)
+        scroll_area.setFixedHeight(900)  # Set visible area height
+
+        self.states_layout.addWidget(scroll_area)
+
+        if self.states:
+            self.curr_state = 0
+            self.labels_for_states[0].setStyleSheet("background-color: yellow; border: 1px solid black; border-radius: 5px;")
+
+
+        
 
 
 #-------------------------------------------------------------------------------------------------------------------------------------
