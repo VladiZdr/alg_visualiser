@@ -2,8 +2,10 @@ from collections import defaultdict,deque
 
 variables_dict = defaultdict(int)
 while_stack = deque()
+order_of_execution = []
 
 def decode_code(code):
+    variables_dict.clear()
     lines = code.splitlines()
     i = 0
     last_level = 0
@@ -19,7 +21,8 @@ def decode_code(code):
             continue
         jumped_last_it = False
 
-        decode_result = decode_line(lines[i][curr_level:])
+        order_of_execution.append(i)
+        decode_result = execute_next(lines[i],curr_level)
 
         #if a condition is not satisfied find next line to execute
         if not decode_result:
@@ -34,6 +37,8 @@ def decode_code(code):
 
     return decode_result
 
+def execute_next(line,curr_level):
+    return decode_line(line[curr_level:])
 
 def decode_line(line):
     if line[:3] == "if ":
@@ -42,7 +47,7 @@ def decode_line(line):
     if line[:6] == "while ":
         return eval_if(line[6:])
     
-    if line[:7] == "return ":
+    if line[:6] == "return":
         if line[7:] in variables_dict:
             return variables_dict[line[7:]]
         return line[7:]

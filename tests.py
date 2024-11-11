@@ -15,6 +15,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(interpreter.decode_line("while num >= 16:"), False)
 
         self.assertEqual(interpreter.decode_line("return 16"), "16")
+        self.assertEqual(interpreter.decode_line("return"), "")
         self.assertEqual(interpreter.decode_line("return string text"), "string text")
 
         self.assertEqual(interpreter.decode_line("number = 0 + 1"), 1)
