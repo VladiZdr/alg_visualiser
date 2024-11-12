@@ -94,7 +94,7 @@ class MyWindow(QWidget):
         return displayed_vals
 
     def next_step_fun(self):
-        # Executes the next step if there are remaining lines
+        # Executes the next step if there are remaining lines 
         if len(interpreter.order_of_execution) <= self.curr_state:
             return
         
@@ -135,7 +135,10 @@ class MyWindow(QWidget):
 
         # Decode the code for execution order and reset variables
         self.lines = code.splitlines()
-        interpreter.decode_code(code)
+        if interpreter.decode_code(code) == "Error: Unsupported operation":
+            self.code_text.setText("")
+            self.show_unsupported_operation_error()
+            return
         interpreter.variables_dict.clear()
 
         # Clear any previous states in the UI
@@ -171,7 +174,7 @@ class MyWindow(QWidget):
 
         # Add container widget to scroll area and configure it
         scroll_area.setWidget(container_widget)
-        scroll_area.setFixedHeight(800)
+        scroll_area.setFixedHeight(850)
         self.states_layout.addWidget(scroll_area)
 
         # Set the first state to highlighted yellow
@@ -189,6 +192,13 @@ class MyWindow(QWidget):
         msg_box.setText(examlpe_codes_for_tests.Example_Codes().placeholder_t_for_code_segment)
         msg_box.exec_()
 
+    def show_unsupported_operation_error(self):
+        msg_box = QMessageBox(self)
+        msg_box.setIcon(QMessageBox.Critical)
+        msg_box.setWindowTitle("Error")
+        msg_box.setText("Error: Unsupported operation")
+        msg_box.setStandardButtons(QMessageBox.Ok)
+        msg_box.exec_()
 #---------------------------------------------------------------------------------------------------------------------------------------------------
 
 def run_app():

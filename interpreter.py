@@ -33,6 +33,9 @@ def decode_code(code):
         order_of_execution.append(i)  # Add current line to execution order
         decode_result = execute_next(lines[i], curr_level)  # Decode the current line
         
+        if decode_result == "Error: Unsupported operation":
+            return decode_result
+
         # If the condition is false, skip to the next line outside the current block
         if not decode_result:
             i = skip_lines_after_false_condition(lines, i, curr_level)
@@ -67,7 +70,9 @@ def decode_line(line):
             return variables_dict[line[7:]]
         return line[7:]
     
-    return eval_expr(line)  # Evaluate a standard expression
+    if contains_assignment_and_operation(line):
+        return eval_expr(line)  # Evaluate a standard expression
+    return "Error: Unsupported operation"
 
 def eval_if(expr):
     """
@@ -125,7 +130,7 @@ def eval_expr(line):
     """
     i = 0
     left_side = ""
-    while line[i] != '=':
+    while line[i] != '=' and i < len(line):
         if line[i] != ' ':
             left_side += line[i]
         i += 1
@@ -133,15 +138,16 @@ def eval_expr(line):
     i += 1  # Skip '=' character
 
     i = skip_spaces(line, i)  # Skip spaces
-
+    
     # Parse the first operand
     first_right = ""
-    while line[i] != ' ':
+    while i < len(line) and line[i] != ' ':
         first_right += line[i]
         i += 1
     
     i = skip_spaces(line, i)
-
+    if i >= len(line):
+        return "Error: Unsupported operation"
     # Get the operator
     op = line[i]
     i += 1
@@ -176,12 +182,12 @@ def perform_op(left_side, first_right_val, second_right_val, op):
         if second_right_val != 0:
             variables_dict[left_side] = first_right_val / second_right_val
         else:
-            return "Error: Division by zero"
+            return "Error: Unsupported operation"
     elif op == '%':
         if second_right_val != 0:
             variables_dict[left_side] = first_right_val % second_right_val
         else:
-            return "Error: Modulus by zero"
+            return "Error: Unsupported operation"
     else:
         return "Error: Unsupported operation"
 
@@ -219,3 +225,7 @@ def get_level(line):
     while curr_level < len(line) and line[curr_level] == '\t':
         curr_level += 1
     return curr_level
+
+def contains_assignment_and_operation(line):
+    # Check for '=' in the line and at least one arithmetic operation
+    return '=' in line and any(op in line for op in ['+', '-', '*', '/'])

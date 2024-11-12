@@ -21,7 +21,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(interpreter.decode_line("number = 0 + 1"), 1)
         self.assertEqual(interpreter.decode_line("number = 10 * 1"), 10)
         self.assertEqual(interpreter.decode_line("number = value + 1"), 1)
-        self.assertEqual(interpreter.decode_line("number = 10 / 0"), "Error: Division by zero")
+        self.assertEqual(interpreter.decode_line("number = 10 / 0"), "Error: Unsupported operation")
 
     def test_if_and_arithmetic(self):
         examlpes = Example_Codes()
