@@ -1,96 +1,114 @@
-from collections import defaultdict,deque
+from collections import defaultdict, deque
 
+# Dictionary to store variable names and values, defaulting to 0 for undefined variables
 variables_dict = defaultdict(int)
+# Stack to manage loops (specifically while loops) and their positions
 while_stack = deque()
+# List to keep track of the order in which lines are executed
 order_of_execution = []
 
 def decode_code(code):
-    variables_dict.clear()
-    while_stack.clear()
-    order_of_execution.clear()
-    lines = code.splitlines()
-    i = 0
-    last_level = 0
-    jumped_last_it = False
+    """
+    Main function to parse and determine the execution order for each line in the code.
+    """
+    variables_dict.clear()    # Clear previous variables
+    while_stack.clear()       # Clear previous loops
+    order_of_execution.clear() # Clear previous execution order
+    
+    lines = code.splitlines()  # Split the code into lines
+    i = 0                      # Line index
+    last_level = 0             # Track the last indentation level
+    jumped_last_it = False     # To track if the last loop iteration was jumped
 
     while i < len(lines):
-        curr_level = get_level(lines[i])
+        curr_level = get_level(lines[i])  # Get indentation level of current line
         
-        #if finished with current loop jump back to while condition
-        if not jumped_last_it and curr_level < last_level and  while_stack: 
+        # If finished with the current loop, jump back to the while condition
+        if not jumped_last_it and curr_level < last_level and while_stack: 
             i = while_stack.pop()
             jumped_last_it = True
             continue
         jumped_last_it = False
 
-        order_of_execution.append(i)
-        decode_result = execute_next(lines[i],curr_level)
-
-        #if a condition is not satisfied find next line to execute
+        order_of_execution.append(i)  # Add current line to execution order
+        decode_result = execute_next(lines[i], curr_level)  # Decode the current line
+        
+        # If the condition is false, skip to the next line outside the current block
         if not decode_result:
             i = skip_lines_after_false_condition(lines, i, curr_level)
-        #if True and while condition save i for jump
+        # If while condition is true, save index to jump back to in `while_stack`
         elif "while" in lines[i][curr_level:]:
             while_stack.append(i)
 
-        last_level = curr_level
-        i += 1    
-        
-
+        last_level = curr_level  # Update the last indentation level
+        i += 1    # Move to the next line
+    
     return decode_result
 
-def execute_next(line,curr_level):
+def execute_next(line, curr_level):
+    """
+    Executes a line of code after stripping indentation.
+    """
     return decode_line(line[curr_level:])
 
 def decode_line(line):
+    """
+    Decodes and evaluates a single line of code.
+    """
     if line[:3] == "if ":
-        return eval_if(line[3:])
-    
+        return eval_if(line[3:])  # Evaluate if-condition
+        
     if line[:6] == "while ":
-        return eval_if(line[6:])
+        return eval_if(line[6:])  # Evaluate while-condition
     
     if line[:6] == "return":
+        # Handle return statement
         if line[7:] in variables_dict:
             return variables_dict[line[7:]]
         return line[7:]
     
-    return  eval_expr(line)
-    
+    return eval_expr(line)  # Evaluate a standard expression
 
 def eval_if(expr):
+    """
+    Evaluates conditional expressions (if or while) and returns a boolean.
+    """
     i = 0
-    i = skip_spaces(expr,i)
+    i = skip_spaces(expr, i)  # Skip leading spaces
 
     left_side = ""
-    while expr[i] != "=" and expr[i] != '<' and expr[i] != '>' and expr[i] != ' ':
+    while expr[i] not in ("=", "<", ">", " "):
         left_side += expr[i]
-        i+=1
+        i += 1
 
-    i = skip_spaces(expr,i)
-    comp = expr[i]
-    i+=1
-    #check for <=, >=, ==
+    i = skip_spaces(expr, i)  # Skip spaces
+    comp = expr[i]            # Get comparison operator
+    i += 1
+
+    # Check for multi-character operators like <=, >=, ==
     if expr[i] == '=':
         comp += expr[i]
-        i+=1
+        i += 1
 
-    i = skip_spaces(expr,i)
+    i = skip_spaces(expr, i)
 
     right_side = ""
     for ch in expr[i:]:
-        if ch == ' ' or ch == ':':
+        if ch in (' ', ':'):
             break
         right_side += ch
 
-    if left_side[0] >= '0' and left_side <= '9':
+    # Convert left and right expressions to integer values if possible
+    if left_side[0].isdigit():
         left_side_val = int(left_side)
     else:
         left_side_val = variables_dict[left_side]
-    if right_side[0] >= '0' and right_side <= '9':
+    if right_side[0].isdigit():
         right_side_val = int(right_side)
     else:
         right_side_val = variables_dict[right_side]
 
+    # Evaluate comparison based on operator and return result
     for ch in comp:
         if (ch == '=' and left_side_val == right_side_val):
             return True
@@ -98,63 +116,56 @@ def eval_if(expr):
             return True
         if (ch == '>' and left_side_val > right_side_val):
             return True
-        
+
     return False
 
-
-
 def eval_expr(line):
+    """
+    Parses and evaluates expressions, including assignment and arithmetic operations.
+    """
     i = 0
     left_side = ""
-    while line[i] != '=' :
-        if(line[i] != ' '):
+    while line[i] != '=':
+        if line[i] != ' ':
             left_side += line[i]
-        i+=1
-    
-    #skip '='
-    i+=1
+        i += 1
 
-    #skip empty spaces
-    i = skip_spaces(line,i)
+    i += 1  # Skip '=' character
 
-    # variable1
+    i = skip_spaces(line, i)  # Skip spaces
+
+    # Parse the first operand
     first_right = ""
-    first_right_val = 0
     while line[i] != ' ':
         first_right += line[i]
-        i+=1
+        i += 1
     
-    i = skip_spaces(line,i)
+    i = skip_spaces(line, i)
 
-    #get operator
+    # Get the operator
     op = line[i]
-    i+=1
-    i = skip_spaces(line,i)
+    i += 1
+    i = skip_spaces(line, i)
 
-    # variable2
+    # Parse the second operand
     second_right = ""
-    second_right_val = 0
     for ch in line[i:]:
         if ch == ' ':
             break
         second_right += ch
-        i+=1
+        i += 1
 
-    #string -> int
-    if first_right[0] <= '9' and first_right[0] >= '0':
-        first_right_val = int(first_right)
-    else:
-        first_right_val = variables_dict[first_right]
-
-    if second_right[0] <= '9' and second_right[0] >= '0':
-        second_right_val = int(second_right)
-    else:
-        second_right_val = variables_dict[second_right]
+    # Convert operand strings to values
+    first_right_val = int(first_right) if first_right.isdigit() else variables_dict[first_right]
+    second_right_val = int(second_right) if second_right.isdigit() else variables_dict[second_right]
     
-    #perform operation and store result
-    return perform_op(left_side,first_right_val,second_right_val,op)
+    # Perform the operation and store the result
+    return perform_op(left_side, first_right_val, second_right_val, op)
 
-def perform_op(left_side,first_right_val,second_right_val,op):
+def perform_op(left_side, first_right_val, second_right_val, op):
+    """
+    Executes arithmetic operations and stores the result in `variables_dict`.
+    """
     if op == '+':
         variables_dict[left_side] = first_right_val + second_right_val
     elif op == '-':
@@ -170,39 +181,41 @@ def perform_op(left_side,first_right_val,second_right_val,op):
         if second_right_val != 0:
             variables_dict[left_side] = first_right_val % second_right_val
         else:
-            return ("Error: Modulus by zero")
+            return "Error: Modulus by zero"
     else:
-        return ("Error: Unsupported operation")
+        return "Error: Unsupported operation"
 
-    return  variables_dict[left_side]
+    return variables_dict[left_side]
 
-def skip_spaces(line,i):
-    while line[i] == ' ':
-        i+=1
+def skip_spaces(line, i):
+    """
+    Skips spaces in the line starting from index `i`.
+    """
+    while i < len(line) and line[i] == ' ':
+        i += 1
     return i
 
 def skip_lines_after_false_condition(lines, i, curr_level):
-    # Start with the next line
-    i += 1  
+    """
+    Skips lines until a line with an indentation level less than or equal to `curr_level` is found.
+    """
+    i += 1  # Move to the next line
     while i < len(lines):
-        tmp_level = 0
-        
-        # Count tabs at the start of the current line to determine its level
-        while tmp_level < len(lines[i]) and lines[i][tmp_level] == '\t':
-            tmp_level += 1
+        tmp_level = get_level(lines[i])
 
-        # If the level is less than or equal to `curr_level`, stop
+        # Stop if we reach a line with the same or less indentation
         if tmp_level <= curr_level:
             break
 
-        # Move to the next line
         i += 1
 
-    # Return the index of the last line before the level was less than or equal to `curr_level`
-    return i - 1
+    return i - 1  # Return the index of the last skipped line
 
 def get_level(line):
+    """
+    Determines the indentation level (number of tabs) for a given line.
+    """
     curr_level = 0
-    while line[curr_level] == '\t':
-        curr_level+=1
+    while curr_level < len(line) and line[curr_level] == '\t':
+        curr_level += 1
     return curr_level

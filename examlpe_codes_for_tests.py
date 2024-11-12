@@ -23,7 +23,7 @@ class Example_Codes():
     code15 = "number = 5 + 0\nres = 0 + 0\nwhile number > 4:\n\tnumber = number - 1\n\tnumber2 = 5 + 0\n\twhile number2 > 4:\n\t\tnumber2 = number2 - 1\n\t\tres = res + 1\nreturn res"
 
     placeholder_t_for_code_segment = """
-    \"var\" = \"par1\" \"operator\" \"par2\" -> \"par\" = const | \"var\"
+    \"var\" = \"par1\" \"operator\" \"par2\" -> \"par\" = \"const\" | \"var\"
     while \"condition\": -> tab and while code
     if \"condition\": -> tab and if code
     """
