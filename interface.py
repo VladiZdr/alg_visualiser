@@ -138,6 +138,7 @@ class MyWindow(QWidget):
         if interpreter.decode_code(code) == "Error: Unsupported operation":
             self.code_text.setText("")
             self.show_unsupported_operation_error()
+            self.get_instructions_fun()
             return
         interpreter.variables_dict.clear()
 
