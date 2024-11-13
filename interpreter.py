@@ -36,13 +36,17 @@ def decode_code(code):
         if decode_result == "Error: Unsupported operation":
             return decode_result
 
+        
+
         # If the condition is false, skip to the next line outside the current block
         if not decode_result:
             i = skip_lines_after_false_condition(lines, i, curr_level)
         # If while condition is true, save index to jump back to in `while_stack`
         elif "while" in lines[i][curr_level:]:
             while_stack.append(i)
-
+        # If called return end program
+        elif "return" in lines[i][curr_level:]:
+            return decode_result
         last_level = curr_level  # Update the last indentation level
         i += 1    # Move to the next line
     
@@ -52,6 +56,8 @@ def execute_next(line, curr_level):
     """
     Executes a line of code after stripping indentation.
     """
+    if "return" in line[curr_level:]:
+        variables_dict["returned"] = variables_dict[line[7:]]
     return decode_line(line[curr_level:])
 
 def decode_line(line):
@@ -67,8 +73,8 @@ def decode_line(line):
     if line[:6] == "return":
         # Handle return statement
         if line[7:] in variables_dict:
-            return variables_dict[line[7:]]
-        return line[7:]
+            return "return "+  str(variables_dict[line[7:]])
+        return line
     
     if contains_assignment_and_operation(line):
         return eval_expr(line)  # Evaluate a standard expression
