@@ -147,7 +147,7 @@ def eval_expr(line):
     
     # Parse the first operand
     first_right = ""
-    while i < len(line) and line[i] != ' ':
+    while i < len(line) and line[i] != ' ' and line[i] != '+' and line[i] != '-' and line[i] != '/' and line[i] != '*' and line[i] != '%':
         first_right += line[i]
         i += 1
     
