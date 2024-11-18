@@ -23,7 +23,6 @@ Algorithm Visualizer is a PyQt-based application that allows users to visualize 
 
    ```bash
    git clone https://github.com/your-username/algorithm-visualizer.git
-   cd algorithm-visualizer
 
     Install required dependencies:
 
@@ -62,10 +61,11 @@ Example Code
 
 Here’s an example snippet to get started:
 
-x = 10
-y = 5
+x = 10 + 0
+y = 5 + 0
 while x > 0:
-    x = x - y
+"\tab"x = x - y
+return x 
 
 This code will demonstrate a loop decrementing x by y in each iteration.
 Limitations
@@ -73,15 +73,10 @@ Limitations
     Syntax: Only supports simple loops, conditionals, and arithmetic operations. Advanced Python syntax is not supported.
     Error Handling: Minimal error handling; unsupported code may result in unexpected behavior.
 
-Contributing
-
-Contributions are welcome! If you have suggestions or improvements, feel free to open an issue or submit a pull request. Please ensure compatibility with the existing structure before making substantial changes.
-License
 
 Acknowledgments
 
 Special thanks to the PyQt and Python communities for providing valuable resources and libraries that make projects like this possible.
 
 
-This `README.md` provides a detailed description of the project, guiding users on installation, usage, and contribution. Adjust the GitHub repository link as needed based on your repository location. Let me know if there’s anything else you’d like to add!
 
