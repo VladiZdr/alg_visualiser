@@ -1,5 +1,4 @@
 import unittest
-import interface
 import interpreter
 from examlpe_codes_for_tests import Example_Codes
 

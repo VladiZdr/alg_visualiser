@@ -86,104 +86,153 @@ class MyWindow(QWidget):
 #--- Functions for Button Actions -------------------------------------------------------------------------------------------------------
 
     def update_vals_fun(self):
-        # Updates the values display text box with current variable values from the interpreter
-        displayed_vals = ""
-        for val in interpreter.variables_dict:
-            displayed_vals += f"{val} = {interpreter.variables_dict[val]}\n"
+        """Updates the values display text box with current variable values from the interpreter."""
+        displayed_vals = self.format_variable_values()
         self.values_text.setText(displayed_vals)
         return displayed_vals
 
+    def format_variable_values(self):
+        """Formats the variable values from interpreter to display in the text box."""
+        return "\n".join(f"{var} = {val}" for var, val in interpreter.variables_dict.items() if var)
+
     def next_step_fun(self):
-        # Executes the next step if there are remaining lines 
-        if len(interpreter.order_of_execution) <= self.curr_state:
+        """Executes the next step in the code visualization if there are remaining lines."""
+        if not self.has_remaining_steps():
             return
-        
-        # Execute line at current state
-        interpreter.execute_next(
-            self.lines[interpreter.order_of_execution[self.curr_state]],
-            interpreter.get_level(self.lines[interpreter.order_of_execution[self.curr_state]])
-        )
-        
+
+        # Execute current step
+        self.execute_current_step()
+
         # Update variable display
         self.update_vals_fun()
 
-        # Change the color of the last state
+        # Update visuals to indicate the current state
+        self.update_state_visuals()
+
+    def has_remaining_steps(self):
+        """Checks if there are any remaining lines to execute."""
+        return len(interpreter.order_of_execution) > self.curr_state
+
+    def execute_current_step(self):
+        """Executes the code at the current line based on the interpreter's order of execution."""
+        line_index = interpreter.order_of_execution[self.curr_state]
+        interpreter.execute_next(self.lines[line_index], interpreter.get_level(self.lines[line_index]))
+
+    def update_state_visuals(self):
+        """Updates the state visuals by adjusting the colors to indicate progress."""
+        # Set previous state to grey
         self.labels_for_states[interpreter.order_of_execution[self.curr_state]].setStyleSheet(
             "background-color: grey; border: 1px solid black; border-radius: 5px;"
         )
         self.curr_state += 1
 
-        # Highlight the current state or end the visualization
-        if len(interpreter.order_of_execution) - 1 > self.curr_state:
-            self.labels_for_states[interpreter.order_of_execution[self.curr_state]].setStyleSheet(
-                "background-color: yellow; border: 1px solid black; border-radius: 5px;"
-            )
+        # Highlight the new current state or mark the end
+        if self.has_remaining_steps():
+            self.highlight_current_state()
         else:
-            self.values_text.setText(self.values_text.toPlainText() + "\nEND")
-            self.labels_for_states[-1].setStyleSheet(
-                "background-color: red; border: 1px solid black; border-radius: 5px;"
-            )
+            self.mark_end_of_visualization()
+
+    def highlight_current_state(self):
+        """Highlights the current state label to indicate it is active."""
+        self.labels_for_states[interpreter.order_of_execution[self.curr_state]].setStyleSheet(
+            "background-color: yellow; border: 1px solid black; border-radius: 5px;"
+        )
+
+    def mark_end_of_visualization(self):
+        """Marks the end of the visualization and adds 'END' text to the values display."""
+        self.values_text.append("\nEND")
+        self.labels_for_states[-1].setStyleSheet(
+            "background-color: red; border: 1px solid black; border-radius: 5px;"
+        )
 
     def create_vis_fun(self):
-        # Prepares visualization states based on code input
-        code = self.code_text.toPlainText()
-        code = "\n".join([line for line in code.splitlines() if line.strip()])  # Remove empty lines
+        """Prepares visualization states based on code input."""
+        code = self.clean_code_input()
         if not code:
             return
-        
-        code += "\nreturn"  # Add a return statement at the end
 
-        # Decode the code for execution order and reset variables
-        self.lines = code.splitlines()
-        if interpreter.decode_code(code) == "Error: Unsupported operation":
-            self.code_text.setText("")
-            self.show_unsupported_operation_error()
-            self.get_instructions_fun()
+        # Decode code and reset interpreter
+        if self.prepare_interpreter(code) == "Error: Unsupported operation":
+            self.handle_unsupported_operation()
             return
+
+        # Clear previous visualization and initialize new states
+        self.initialize_states()
+
+        # Configure the scroll area and populate with labels for each state
+        self.setup_scroll_area()
+
+        # Highlight the starting state
+        self.highlight_starting_state()
+
+    def clean_code_input(self):
+        """Returns the cleaned code input without empty lines and with an appended 'return'."""
+        code = "\n".join(line for line in self.code_text.toPlainText().splitlines() if line.strip())
+        return f"{code}\nreturn" if code else ""
+
+    def prepare_interpreter(self, code):
+        """Sets up the interpreter with decoded code and clears variables."""
+        self.lines = code.splitlines()
+        interpreter.decode_code(code)
         interpreter.variables_dict.clear()
 
-        # Clear any previous states in the UI
+    def handle_unsupported_operation(self):
+        """Handles unsupported operations by clearing input and showing an error message."""
+        self.code_text.setText("")
+        self.show_unsupported_operation_error()
+        self.get_instructions_fun()
+
+    def initialize_states(self):
+        """Clears previous states and initializes new states for visualization."""
         self.states = []
         self.labels_for_states = []
 
-        # Remove previous scroll areas in `states_layout`
+        # Remove any previous scroll areas
         for i in reversed(range(self.states_layout.count())):
             widget_to_remove = self.states_layout.itemAt(i).widget()
             if widget_to_remove is not None:
                 widget_to_remove.deleteLater()
 
-        # Create new states for each line of code
-        for i in range(len(self.lines)):
-            curr_level = interpreter.get_level(self.lines[i])
+        # Create states for each line of code
+        for i, line in enumerate(self.lines):
+            curr_level = interpreter.get_level(line)
             self.states.append(State.State(i, curr_level, i))
 
-        # Initialize scroll area and grid layout for state labels
+    def setup_scroll_area(self):
+        """Sets up the scroll area with a grid layout of state labels."""
         scroll_area = QScrollArea(self)
         scroll_area.setWidgetResizable(True)
         container_widget = QWidget()
         grid_layout = QGridLayout(container_widget)
 
-        # Create QLabel for each state and add to grid layout
-        for i, s in enumerate(self.states):
-            state = QLabel(self)
-            state.setFixedSize(50, 50)
-            state.setStyleSheet("background-color: grey; border: 1px solid black; border-radius: 25px;")
-            state.setAlignment(Qt.AlignCenter)
-            state.setText(str(s.index + 1) if i != len(self.states) - 1 else "END")
-            grid_layout.addWidget(state, s.pos_y, s.pos_x)
-            self.labels_for_states.append(state)
+        # Add labels for each state to the grid layout
+        for i, state in enumerate(self.states):
+            label = self.create_state_label(i, state)
+            grid_layout.addWidget(label, state.pos_y, state.pos_x)
+            self.labels_for_states.append(label)
 
-        # Add container widget to scroll area and configure it
+        # Configure scroll area and add to layout
         scroll_area.setWidget(container_widget)
         scroll_area.setFixedHeight(850)
         self.states_layout.addWidget(scroll_area)
 
-        # Set the first state to highlighted yellow
+    def create_state_label(self, index, state):
+        """Creates a QLabel for a specific state in the visualization."""
+        label = QLabel(self)
+        label.setFixedSize(50, 50)
+        label.setStyleSheet("background-color: grey; border: 1px solid black; border-radius: 25px;")
+        label.setAlignment(Qt.AlignCenter)
+        label.setText(str(state.index + 1) if index != len(self.states) - 1 else "END")
+        return label
+
+    def highlight_starting_state(self):
+        """Highlights the initial state to indicate the start of the visualization."""
         if self.states:
             self.curr_state = 0
             self.labels_for_states[0].setStyleSheet(
                 "background-color: yellow; border: 1px solid black; border-radius: 5px;"
             )
+
 
     def get_instructions_fun(self):
         # Displays a message box with code syntax information

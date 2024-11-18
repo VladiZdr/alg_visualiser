@@ -36,8 +36,6 @@ def decode_code(code):
         if decode_result == "Error: Unsupported operation":
             return decode_result
 
-        
-
         # If the condition is false, skip to the next line outside the current block
         if not decode_result:
             i = skip_lines_after_false_condition(lines, i, curr_level)
